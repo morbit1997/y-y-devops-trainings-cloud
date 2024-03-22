@@ -1,0 +1,20 @@
+#!/bin/bash
+mkdir /var/prom_conf
+cat <<EOF > /var/prom_conf/prometheus.yml
+global:
+  scrape_interval: 5s
+  scrape_timeout: 2s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: pushgateway
+    honor_labels: true
+    static_configs:
+      - targets:
+          - push:9091
+
+EOF
+docker network create -d bridge my-net
+docker run --network=my-net -h prom-d -p 9090:9090 --name prom -v /var/prom_conf/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus &
+docker run --network=my-net -h push -d -p 9091:9091 --name push bitnami/pushgateway:latest &
+

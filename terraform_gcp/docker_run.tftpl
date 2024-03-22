@@ -1,0 +1,3 @@
+#!/bin/bash
+docker run -d -p 8080:8080 -p 9090:9090 --restart always morbit1997/catgtp:latest
+while true; do curl -s localhost:9090 | curl --data-binary @- http://${int_ip_prom}:9091/metrics/job/catgtp/instance/$HOSTNAME; sleep 10; done &

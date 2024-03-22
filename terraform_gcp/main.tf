@@ -29,10 +29,9 @@ resource "google_compute_instance_template" "my_template_cat" {
     access_config {
     }
   }
-  #metadata = {
-  #  ssh-keys = "root:${file("id_rsa.pub")}"
-  #}
-  metadata_startup_script = "${file("docker_run.sh")}"
+  metadata_startup_script = templatefile("docker_run.tftpl",{
+    int_ip_prom = google_compute_address.input_prom.address
+  })
 }
 resource "google_compute_instance_group_manager" "catgtp_insances" {
   name = "catgtp-instanses"
@@ -61,6 +60,10 @@ resource "google_compute_firewall" "open_custom_ports" {
   }
 
  source_ranges = ["0.0.0.0/0"]
+}
+resource "google_compute_project_default_network_tier" "default" {
+  network_tier = "PREMIUM"
+  
 }
 resource "google_compute_global_address" "default" {
   name = "lb-ipv4"
@@ -104,4 +107,28 @@ resource "google_compute_http_health_check" "my_health_check" {
   port = 8080
   check_interval_sec = 1 
   timeout_sec        = 1 
+}
+resource "google_compute_address" "input_prom" {
+  name = "prom-ip"
+  address_type = "INTERNAL"
+  
+}
+resource "google_compute_instance" "promet" {
+  name         = "prom-instance"
+  machine_type = "e2-micro"
+
+  boot_disk {
+    initialize_params {
+      image = "cos-cloud/cos-stable"
+    }
+  }
+
+  network_interface {
+    network = "default"
+    network_ip = google_compute_address.input_prom.address
+    access_config {
+    }
+  }
+  metadata_startup_script = file("prom_conf.tftpl")
+  
 }
