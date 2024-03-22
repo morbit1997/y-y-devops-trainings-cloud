@@ -100,7 +100,7 @@ resource "google_compute_global_forwarding_rule" "my_forwarding_rule" {
   ip_address = google_compute_global_address.default.id
 } 
  
-# Создание здоровья проверки 
+
 resource "google_compute_http_health_check" "my_health_check" { 
   name               = "my-health-check"
   request_path       = "/ping" 
